@@ -13,6 +13,8 @@
     python party_wechat_check.py --excel "名单.xlsx" --wechat-file "members.txt" --output "结果.xlsx"
 """
 
+__version__ = "1.1.0"
+
 # ============================================================================
 # Section 1: Imports and Constants
 # ============================================================================
@@ -60,6 +62,14 @@ except ImportError:
     console = None
 
 # --- Constants ---
+# 复姓集合（用于姓名提取时避免拆分复姓）
+COMPOUND_SURNAMES = [
+    '欧阳', '司马', '上官', '诸葛', '夏侯', '皇甫', '尉迟',
+    '公羊', '慕容', '公孙', '令狐', '独孤', '长孙', '宇文',
+    '东方', '赫连', '澹台', '申屠', '闻人', '闾丘', '太叔',
+    '端木', '鲜于', '南门', '左丘', '百里', '东郭', '拓跋',
+]
+
 # Excel 姓名列关键词（按优先级排序）
 NAME_COLUMN_KEYWORDS = [
     '姓名', '名字', '党员姓名', '学生姓名', '人员姓名',
@@ -146,6 +156,9 @@ def normalize_name(name: str) -> str:
 def extract_chinese_name_candidates(text: str) -> List[str]:
     """从一段文本中提取所有可能的中文姓名片段（2-4字连续中文）。
 
+    能识别复姓（如欧阳、司马），避免拆分复姓产生错误候选。
+    例如 "欧阳泽坪" 会提取 "欧阳泽坪"、"欧阳泽"、"欧阳"，但不会提取 "阳泽坪"。
+
     Args:
         text: 规范化后的微信昵称
 
@@ -157,9 +170,24 @@ def extract_chinese_name_candidates(text: str) -> List[str]:
     candidates = []
     for chunk in chinese_chars:
         n = len(chunk)
-        # 提取 2-4 字片段（滑动窗口）
+        # 定位所有复姓在 chunk 中的内部位置（避免拆分复姓）
+        surname_inner_positions: set = set()
+        for cs in COMPOUND_SURNAMES:
+            pos = 0
+            while True:
+                pos = chunk.find(cs, pos)
+                if pos == -1:
+                    break
+                # 复姓内部（第二个字及之后）不能作为候选起点
+                for inner in range(pos + 1, pos + len(cs)):
+                    surname_inner_positions.add(inner)
+                pos += 1
+
+        # 提取 2-4 字片段（滑动窗口），跳过会拆分复姓的起点
         for length in range(min(n, 4), 1, -1):
             for start in range(n - length + 1):
+                if start in surname_inner_positions:
+                    continue
                 sub = chunk[start:start + length]
                 if sub not in candidates:
                     candidates.append(sub)
@@ -854,6 +882,12 @@ def build_parser() -> argparse.ArgumentParser:
         '--verbose', '-v',
         action='store_true',
         help='显示全部已匹配明细',
+    )
+    parser.add_argument(
+        '--version', '-V',
+        action='version',
+        version=f'%(prog)s {__version__}',
+        help='显示版本号',
     )
 
     return parser

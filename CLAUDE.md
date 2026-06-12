@@ -60,13 +60,13 @@ DOM references accessed via `dom.*` getters (lazy, always current even if elemen
 
 ## party_wechat_check.py — 党员微信群成员核对工具
 
-Single-file Python utility to compare an Excel party-member roster against WeChat group member screenshots (OCR text). Finds who hasn't joined the group or hasn't changed their nickname.
+Single-file Python utility (v1.1.0) to compare an Excel party-member roster against WeChat group member screenshots (OCR text). Finds who hasn't joined the group or hasn't changed their nickname.
 
 ### How to Run
 
 ```bash
 # Install deps (once)
-pip install rapidfuzz rich
+pip install -r requirements_wechat_check.txt
 
 # Basic usage
 python party_wechat_check.py --excel "名单.xlsx" --wechat-file "members.txt"
@@ -79,6 +79,16 @@ python party_wechat_check.py --excel "名单.xlsx" --wechat-file "members.txt" -
 
 # Show all match details
 python party_wechat_check.py --excel "名单.xlsx" --wechat-file "members.txt" --verbose
+
+# Show version
+python party_wechat_check.py --version
+```
+
+### Running Tests
+
+```bash
+pip install pytest
+pytest test_data/test_core.py -v   # 32 tests
 ```
 
 ### Workflow
@@ -90,6 +100,7 @@ python party_wechat_check.py --excel "名单.xlsx" --wechat-file "members.txt" -
 ### Key Design
 
 - **Name normalization**: strips emoji, brackets, common WeChat decoration tags, compound surname awareness
+- **Compound surname support**: recognizes 欧阳/司马/上官 etc., prevents false candidates (e.g., won't extract "阳泽坪" from "欧阳泽坪")
 - **Two-pass matching**: forward (Excel→WeChat contains-match) + reverse (extract Chinese name substrings from unmatched WeChat nicknames)
 - **rapidfuzz**: `partial_ratio` for fuzzy matching when direct contains fails (default threshold 85%)
 - **Rich**: colored console tables (auto-falls back to plain text if Rich not installed)
