@@ -1,3 +1,19 @@
-# Claude Code
-.claude/plans/
-.claude/settings.local.json
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Test artifacts
+test_data/test_output*.xlsx
+test_data/*_result.txt
+test_data/excel_info.txt
+test_data/wechat_raw.txt
+test_data/search_not_found.txt
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
