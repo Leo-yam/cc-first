@@ -1,7 +1,0 @@
-# 党员微信群成员核对工具依赖
-# pip install -r requirements_wechat_check.txt
-
-rapidfuzz>=3.0
-rich>=13.0
-pandas>=1.3
-openpyxl>=3.0
